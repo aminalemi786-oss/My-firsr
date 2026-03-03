@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title> Site de Revision </title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0066cc;
+            text-align: center;
+        }
+        h2 {
+            color: #0066cc;
+        }
+        .login-form {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin: 5px 0;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+        .subjects {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .subject-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            width: 200px;
+            text-align: center;
+            border: 2px solid #ddd;
+            cursor: pointer;
+        }
+        .subject-card:hover {
+            border-color: #0066cc;
+        }
+        .nav {
+            background: #0066cc;
+            padding: 10px;
+            color: white;
+            text-align: center;
+        }
+        .nav span {
+            margin: 0 5px;
+        }
+        .nav span.link {
+            cursor: pointer;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            width: auto;
+            margin-bottom: 15px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li.chapter-item {
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        li.chapter-item:hover {
+            text-decoration: underline;
+        }
+        #lesson-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        #lesson-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        #lesson-text p {
+            margin-bottom: 8px;
+        }
+        .figure-list {
+            margin: 10px 0;
+        }
+        .figure-item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 4px solid #0066cc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="login-page" class="page active">
+    <div class="container">
+        <h1> Site de Revision </h1>
+        
+        <div class="login-form">
+            <h2>Connexion</h2>
+            <input type="text" id="username" placeholder="Nom">
+            <input type="email" id="email" placeholder="email">
+            <input type="password" id="password" placeholder="mot de passe">
+            <button onclick="login()">Commencer →</button>
+        </div>
+    </div>
+</div>
+
+<div id="app" style="display: none;">
+    <div class="nav">
+        <span class="link" onclick="showPage('home')">🏠 Accueil</span> | 
+        <span class="link" onclick="showPage('profile')">👤 Profil</span>
+        <span id="user-info" style="float: right;">...</span>
+    </div>
+
+    <!-- HOME -->
+    <div id="home-page" class="page">
+        <div class="container">
+            <h1>Bienvenue <span id="welcome-name"></span>!</h1>
+
+            <h2>Choisis une matiere:</h2>
+            <div class="subjects" id="home-subjects">
+                <!-- Les matieres vont ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBJECT DETAIL + LESSON -->
+    <div id="subject-page" class="page">
+        <div class="container">
+            <button class="back-btn" onclick="showPage('home')">← Retour</button>
+            <h1 id="subject-title">Titre matiere</h1>
+            <p id="subject-desc" style="text-align:center; color:#666;"></p>
+            <h2>Chapitres</h2>
+            <ul id="subject-chapters">
+                <!-- chapitres -->
+            </ul>
+
+            <div id="lesson-box" style="display:none;">
+                <div id="lesson-title"></div>
+                <div id="lesson-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile-page" class="page">
+        <div class="container">
+            <h1>Mon Profil</h1>
+            <p id="profile-info">Chargement...</p>
+            <button onclick="logout()" style="background: #dc3545;">Deconnexion</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Donnees pour matieres + lecons detaillees
+    const subjects = {
+        math: {
+            id: 'math',
+            name: '📐 Mathematiques',
+            shortName: 'Mathematiques',
+            desc: 'Mathematiques',
+            chapters: [
+                {
+                    id: 'm1',
+                    title: 'Les fonctions affines',
+                    lesson: `
+                        <p>Une fonction affine est une fonction de la forme f(x) = ax + b. La lettre a s'appelle le coefficient directeur et b s'appelle l'ordonnée à l'origine.</p>
+                        <p>Graphiquement, une fonction affine est toujours une droite dans un repère. Si a est positif, la droite monte quand on va vers la droite (la fonction est croissante). Si a est négatif, la droite descend (la fonction est décroissante). Si a = 0, la fonction est constante : c'est une droite horizontale.</p>
+                        <p>Exemple simple : f(x) = 2x + 3. Quand x augmente de 1, f(x) augmente de 2. La droite coupe l'axe des ordonnées au point (0 ; 3) car f(0) = 3.</p>
+                    `
+                },
+                {
+                    id: 'm2',
+                    title: 'Fonctions du second degre',
+                    lesson: `
+                        <p>Une fonction du second degré s'écrit f(x) = ax² + bx + c avec a différent de 0. Sa courbe dans un repère est une parabole (en forme de U ou de ∩).</p>
+                        <p>Pour étudier cette fonction, on utilise le discriminant : Δ = b² - 4ac. S'il est positif, il y a deux solutions. S'il est nul, il y a une seule solution double. S'il est négatif, il n'y a pas de solution réelle.</p>
+                        <p>On s'intéresse aussi au sommet de la parabole, qui donne le minimum ou le maximum de la fonction. L'abscisse du sommet est xS = -b / (2a).</p>
+                    `
+                },
+                {
+                    id: 'm3',
+                    title: 'Probabilites de base',
+                    lesson: `
+                        <p>La probabilité mesure la chance qu'un événement se produise. Elle est comprise entre 0 (impossible) et 1 (certain). On peut aussi l'écrire en pourcentage.</p>
+                        <p>Dans une expérience aléatoire, on calcule souvent P(A) = nombre de cas favorables / nombre de cas possibles. Par exemple, pour un dé à 6 faces, il y a 1 face avec le nombre 3 et 6 faces possibles. Donc P(obtenir 3) = 1/6.</p>
+                        <p>On sait aussi que P(A) + P(non A) = 1. Si la probabilité de réussir un exercice est 0,7, alors la probabilité d'échouer est 0,3.</p>
+                    `
+                }
+            ]
+        },
+        francais: {
+            id: 'francais',
+            name: '📖 Francais',
+            shortName: 'Francais',
+            desc: 'Francais',
+            chapters: [
+                {
+                    id: 'f1',
+                    title: 'Les figures de style',
+                    lesson: `
+                        <p>Les figures de style sont des procédés littéraires qui enrichissent le langage et créent des effets particuliers.</p>
+                        
+                        <div class="figure-list">
+                            <div class="figure-item"><strong>La comparaison :</strong> rapproche deux éléments à l'aide d'un outil comparatif (comme, tel, pareil à...) Ex: "Il est fort <em>comme</em> un lion."</div>
+                            <div class="figure-item"><strong>La métaphore :</strong> comparaison sans outil. Ex: "Cet élève est un lion en maths."</div>
+                            <div class="figure-item"><strong>La personnification :</strong> attribuer des caractéristiques humaines à un être ou une chose inanimée. Ex: "Le vent <em>siffle</em> dans les arbres."</div>
+                            <div class="figure-item"><strong>La métonymie :</strong> remplacer un mot par un autre qui lui est associé. Ex: "Boire un <em>verre</em>" (le contenant pour le contenu).</div>
+                            <div class="figure-item"><strong>La synecdoque :</strong> partie pour le tout ou le tout pour la partie. Ex: "Une voile au loin" (bateau).</div>
+                            <div class="figure-item"><strong>L'hyperbole :</strong> exagération volontaire. Ex: "Je t'ai dit <em>1000 fois</em> de ranger !"</div>
+                            <div class="figure-item"><strong>L'apostrophe :</strong> invocation d'une personne ou chose absente. Ex: "<em>Ô temps !</em> Suspends ton vol."</div>
+                            <div class="figure-item"><strong>L'euphémisme :</strong> adoucir une idée dure. Ex: "Il est <em>parti</em>" (mort).</div>
+                            <div class="figure-item"><strong>L'ironie :</strong> dire le contraire de ce que l'on pense. Ex: "Bravo, quel génie !" (à un idiot).</div>
+                            <div class="figure-item"><strong>Le paradoxe :</strong> affirmation qui semble contradictoire mais contient une vérité. Ex: "Plus on connaît, plus on ignore."</div>
+                            <div class="figure-item"><strong>L'oxymore :</strong> assemblage de deux mots contradictoires. Ex: "Un <em>silence assourdissant</em>."</div>
+                            <div class="figure-item"><strong>L'antithèse :</strong> opposition de deux idées. Ex: "L'homme n'est <em>ni ange ni bête</em>."</div>
+                            <div class="figure-item"><strong>La litote :</strong> dire moins pour suggérer plus. Ex: "Il ne manque <em>pas de courage</em>" (très courageux).</div>
+                        </div>
+                    `
+                },
+                {
+                    id: 'f2',
+                    title: 'La dissertation litteraire',
+                    lesson: `
+                        <p>La dissertation littéraire est un texte argumentatif qui répond à une question sur une œuvre ou un thème littéraire. Elle a toujours trois grandes parties : introduction, développement et conclusion.</p>
+                        <p>Dans l'introduction, on commence par une accroche, on présente le sujet, on pose une problématique claire, puis on annonce le plan. Le développement est divisé en deux ou trois parties. Chaque partie contient une idée principale, des arguments et des exemples précis tirés des textes.</p>
+                        <p>La conclusion rappelle l'essentiel de ton raisonnement, répond à la problématique et ouvre la réflexion.</p>
+                    `
+                },
+                {
+                    id: 'f3',
+                    title: 'Grammaire : les propositions',
+                    lesson: `
+                        <p>Une phrase peut contenir une ou plusieurs propositions. Une proposition est un groupe de mots qui contient au moins un verbe conjugué.</p>
+                        <p>La proposition principale peut exister seule, mais elle est souvent accompagnée d'au moins une proposition subordonnée. La subordonnée ne peut pas exister seule car elle dépend de la principale.</p>
+                        <p>Il existe plusieurs types de subordonnées : conjonctives (introduites par "que", "parce que"...), relatives (introduites par "qui", "que", "dont", "où"...), et interrogatives indirectes (introduites par "si", "ce que"...).</p>
+                    `
+                }
+            ]
+        },
+        histoire: {
+            id: 'histoire',
+            name: '🌍 Histoire-Geo',
+            shortName: 'Histoire-Geographie',
+            desc: 'Histoire',
+            chapters: [
+                {
+                    id: 'h1',
+                    title: 'La Premiere Guerre mondiale',
+                    lesson: `
+                        <p>La Première Guerre mondiale a lieu de 1914 à 1918. Elle oppose principalement la Triple Entente (France, Royaume-Uni, Russie) à la Triple Alliance (Allemagne, Autriche-Hongrie, Italie au début).</p>
+                        <p>Le déclencheur est l'assassinat de l'archiduc François-Ferdinand à Sarajevo en 1914. Le système d'alliances entraîne rapidement de nombreux pays dans le conflit.</p>
+                        <p>Les conséquences sont énormes : des millions de morts, des empires qui disparaissent et un nouveau tracé des frontières en Europe.</p>
+                    `
+                },
+                {
+                    id: 'h2',
+                    title: 'La Seconde Guerre mondiale',
+                    lesson: `
+                        <p>La Seconde Guerre mondiale se déroule de 1939 à 1945. Elle oppose principalement les Alliés (France, Royaume-Uni, URSS, États-Unis...) aux puissances de l'Axe (Allemagne nazie, Italie fasciste, Japon).</p>
+                        <p>La guerre commence avec l'invasion de la Pologne par l'Allemagne en 1939. Elle se caractérise par des combats sur plusieurs continents et un génocide, la Shoah.</p>
+                        <p>La guerre se termine en 1945 avec la capitulation de l'Allemagne puis du Japon.</p>
+                    `
+                }
+            ]
+        }
+    };
+
+    let currentUser = null;
+    let currentSubjectId = null;
+
+    function login() {
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (username && email && password) {
+            currentUser = {name: username, email: email};
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('user-info').textContent = currentUser.name;
+            document.getElementById('welcome-name').textContent = currentUser.name;
+            document.getElementById('profile-info').textContent = 'Nom : ' + currentUser.name + ' | Email : ' + currentUser.email;
+            renderSubjects();
+            showPage('home');
+        } else {
+            alert('Nom, email et mot de passe requis!');
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('login-page').style.display = 'block';
+        document.getElementById('username').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('password').value = '';
+    }
+
+    function renderSubjects() {
+        const cardsHtml = Object.values(subjects).map(s => `
+            <div class="subject-card" onclick="openSubject('${s.id}')">
+                <div style="font-size: 2em; margin-bottom: 10px;">${s.name.split(' ')[0]}</div>
+                <div>${s.desc}</div>
+                <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                    ${s.chapters.length} chapitres
+                </div>
+            </div>
+        `).join('');
+        
+        document.getElementById('home-subjects').innerHTML = cardsHtml;
+    }
+
+    function openSubject(id) {
+        const s = subjects[id];
+        if (!s) return;
+
+        currentSubjectId = id;
+
+        document.getElementById('subject-title').textContent = s.shortName;
+        document.getElementById('subject-desc').textContent = s.desc;
+
+        const liHtml = s.chapters.map(function(chap) {
+            return '<li class="chapter-item" onclick="openLesson(\'' + chap.id + '\')">' + chap.title + '</li>';
+        }).join('');
+        document.getElementById('subject-chapters').innerHTML = liHtml;
+
+        document.getElementById('lesson-box').style.display = 'none';
+
+        showPage('subject');
+    }
+
+    function openLesson(chapterId) {
+        const s = subjects[currentSubjectId];
+        if (!s) return;
+
+        const chap = s.chapters.find(function(c) {
+            return c.id === chapterId;
+        });
+        if (!chap) return;
+
+        document.getElementById('lesson-title').textContent = chap.title;
+        document.getElementById('lesson-text').innerHTML = chap.lesson;
+        document.getElementById('lesson-box').style.display = 'block';
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('#app .page').forEach(function(page) {
+            page.classList.remove('active');
+        });
+
+        const page = document.getElementById(pageId + '-page');
+        if (page) {
+            page.classList.add('active');
+        }
+    }
+
+    document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+    document.getElementById('email').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+</script>
+
+</body>
+</html>
